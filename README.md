@@ -16,5 +16,5 @@ Add in your `config_prod.yml` file, you don't need this lines when you are in de
 elao_error_notifier:
     from: from@example.com
     to: to@example.com
-    handle404: false
+    handle404: true
 ```
