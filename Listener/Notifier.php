@@ -81,8 +81,8 @@ class Notifier
         }
 
         $body = $this->templating->render('ElaoErrorNotifierBundle::mail.html.twig', array(
-            'exception' => $e,
-            'exception_class' => getclass($exception),
+            'exception' => $exception,
+            'exception_class' => get_class($exception),
             'request' => $event->getRequest(),
         ));
 
