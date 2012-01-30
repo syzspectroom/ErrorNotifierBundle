@@ -2,11 +2,41 @@
 
 ## Installation
 
-Add the followings lines to your `deps` file
+###Add the followings lines to your `deps` file
+
+    // deps
 
     [ElaoErrorNotifierBundle]
-    git=git://github.com/Elao/ErrorNotifierBundle.git
-    target=bundles/Elao/ErrorNotifierBundle
+        git=git://github.com/Elao/ErrorNotifierBundle.git
+        target=bundles/Elao/ErrorNotifierBundle
+
+### Register autoloading
+
+    // app/autoload.php
+
+    $loader->registerNamespaces(array(
+        ...
+        'Elao' => __DIR__.'/../vendor/bundles',
+    ));
+
+### Register the bundle
+
+    // app/AppKernel.php
+
+    public function registerBundles()
+    {
+        return array(
+            // ...
+            new Elao\ErrorNotifierBundle\ElaoErrorNotifierBundle(),
+            // ...
+        );
+    }
+
+### Run the vendors script:
+
+```bash
+$ php bin/vendors install
+```
 
 #Configuration
 
@@ -17,4 +47,5 @@ elao_error_notifier:
     from: from@example.com
     to: to@example.com
     handle404: true
+```
 ```
