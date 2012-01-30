@@ -33,6 +33,9 @@ class ElaoErrorNotifierExtension extends Extension
             $container->setParameter('elao.error_notifier.from', $config['from']);
             $container->setParameter('elao.error_notifier.to', $config['to']);
             $container->setParameter('elao.error_notifier.handle404', $config['handle404']);
+            
+            $copy = isset($config['copy']) ? $config['copy'] : null; 
+            $container->setParameter('elao.error_notifier.copy', $copy);            
 
             $loader = new XmlFileLoader($container, new FileLocator(array(__DIR__.'/../Resources/config/')));
             $loader->load('services.xml');
