@@ -72,32 +72,26 @@ class Notifier
         
         $exception = $event->getException();
 
-        // Http Error
-        if ($exception instanceof HttpException) {
+if ($exception instanceof HttpException) {
             if (500 === $exception->getStatusCode() || (404 === $exception->getStatusCode() && true === $this->handle404)) {
                 $body = $this->templating->render('ElaoErrorNotifierBundle::mail.html.twig', array(
-                    'exception'       => $exception,
+                    'exception' => $exception,
                     'exception_class' => get_class($exception),
-                    'request'         => $event->getRequest(),
+                    'request' => $event->getRequest(),
                 ));
 
-
-        $body = $this->templating->render('ElaoErrorNotifierBundle::mail.html.twig', array(
-            'exception' => $exception,
-            'exception_class' => get_class($exception),
-            'request' => $event->getRequest(),
-        ));
-
-        $mail = \Swift_Message::newInstance();
-        $mail->setSubject('[' . $event->getRequest()->headers->get('host') . '] Error');
-        $mail->setFrom($this->from);
-        if (!is_null($this->copy)) {
-            $mail->setBcc($this->copy);
+                $mail = \Swift_Message::newInstance();
+                $mail->setSubject('[' . $event->getRequest()->headers->get('host') . '] Error');
+                $mail->setFrom($this->from);
+                if (!is_null($this->copy)) {
+                    $mail->setBcc($this->copy);
+                }
+                $mail->setTo($this->to);
+                $mail->setContentType('text/html');
+                $mail->setBody($body);
+                
+                $this->mailer->send($mail);
+            }
         }
-        $mail->setTo($this->to);
-        $mail->setContentType('text/html');
-        $mail->setBody($body);
-
-        $this->mailer->send($mail);
     }
 }
