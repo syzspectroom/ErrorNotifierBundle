@@ -8,6 +8,8 @@ use Symfony\Component\HttpKernel\Exception\FlattenException;
 use \Swift_Mailer;
 
 use Symfony\Component\Templating\EngineInterface;
+use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\HttpKernel\HttpKernelInterface;
 
 /**
  * Notifier
@@ -28,6 +30,8 @@ class Notifier
     private $from;
 
     private $to;
+    
+    private $copy;
 
     private $handle404;
 
@@ -38,20 +42,18 @@ class Notifier
      * @param EngineInterface $templating templating
      * @param string          $from       send mail from
      * @param string          $to         send mail to
+     * @param string          $copy       send mail copy to
      * @param boolean         $handle404  handle 404 error ?
      * 
      * @return void
      */
-    public function __construct(Swift_Mailer $mailer, EngineInterface $templating, $from, $to, $handle404 = false)
+    public function __construct(Swift_Mailer $mailer, EngineInterface $templating, $from, $to, $copy, $handle404 = false)
     {
         $this->mailer = $mailer;
-
         $this->templating = $templating;
-
         $this->from = $from;
-
         $this->to = $to;
-
+        $this->copy = $copy;
         $this->handle404 = $handle404;
     }
 
@@ -64,21 +66,21 @@ class Notifier
      */
     public function onKernelException(GetResponseForExceptionEvent $event)
     {
+        if (HttpKernelInterface::MASTER_REQUEST !== $event->getRequestType()) {
+            return;
+        }
+        
         $exception = $event->getException();
 
         // Http Error
         if ($exception instanceof HttpException) {
+            if (500 === $exception->getStatusCode() || (404 === $exception->getStatusCode() && true === $this->handle404)) {
+                $body = $this->templating->render('ElaoErrorNotifierBundle::mail.html.twig', array(
+                    'exception'       => $exception,
+                    'exception_class' => get_class($exception),
+                    'request'         => $event->getRequest(),
+                ));
 
-            if ($exception->getStatusCode() == 404) {
-                // we handle 404 Error ?
-                if (false === $this->handle404) {
-                    return;
-                }
-            } else if ($exception->getStatusCode() != 500) {
-                // always catch 500
-                return;
-            }
-        }
 
         $body = $this->templating->render('ElaoErrorNotifierBundle::mail.html.twig', array(
             'exception' => $exception,
@@ -86,12 +88,15 @@ class Notifier
             'request' => $event->getRequest(),
         ));
 
-        $mail = \Swift_Message::newInstance()
-                ->setSubject('[' . $event->getRequest()->headers->get('host') . '] Error')
-                ->setFrom($this->from)
-                ->setTo($this->to)
-                ->setContentType('text/html')
-                ->setBody($body);
+        $mail = \Swift_Message::newInstance();
+        $mail->setSubject('[' . $event->getRequest()->headers->get('host') . '] Error');
+        $mail->setFrom($this->from);
+        if (!is_null($this->copy)) {
+            $mail->setBcc($this->copy);
+        }
+        $mail->setTo($this->to);
+        $mail->setContentType('text/html');
+        $mail->setBody($body);
 
         $this->mailer->send($mail);
     }
