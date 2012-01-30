@@ -26,6 +26,7 @@ class Configuration implements ConfigurationInterface
             ->children()
                 ->scalarNode('to')->cannotBeEmpty()->end()
                 ->scalarNode('from')->cannotBeEmpty()->end()
+                ->scalarNode('copy')->end()
                 ->booleanNode('handle404')->cannotBeEmpty()->defaultValue(false)->end()
             ->end();
 
